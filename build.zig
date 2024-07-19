@@ -8,17 +8,20 @@ pub fn build(b: *std.Build) !void {
     const capy_dep = b.dependency("capy", .{
         .target = target,
         .optimize = optimize,
-        .app_name = @as([]const u8, "capy-template"),
+        .app_name = @as([]const u8, "capy-stl-viewer"),
     });
     const capy = capy_dep.module("capy");
 
+    const zmath = b.dependency("zmath", .{});
+
     const exe = b.addExecutable(.{
-        .name = "capy-template",
+        .name = "capy-stl-viewer",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
     exe.root_module.addImport("capy", capy);
+    exe.root_module.addImport("zmath", zmath.module("root"));
     b.installArtifact(exe);
 
     const run_cmd = try build_capy.runStep(exe, .{ .args = b.args });
@@ -28,7 +31,7 @@ pub fn build(b: *std.Build) !void {
     // Building for WebAssembly
     @setEvalBranchQuota(5000);
     const wasm = b.addExecutable(.{
-        .name = "capy-template",
+        .name = "capy-stl-viewer",
         .root_source_file = b.path("src/main.zig"),
         .target = b.resolveTargetQuery(
             comptime std.Target.Query.parse(.{ .arch_os_abi = "wasm32-freestanding" }) catch unreachable,
